@@ -40,9 +40,9 @@ public partial class Home
         }
         catch (Exception ex)
         {
-            Logger.LogError($"Error fetching levels: {ex.Message}");
+            Logger.LogError($"Error fetching levels: {ex.Message}{ex.StackTrace} \n\n\n\n {ex.InnerException}");
             errorHappened = true;
-            errorMessage = $"Failed to load levels: {ex.Message}";
+            errorMessage = $"Failed to load levels: {ex.Message}  {ex.StackTrace} \n\n {ex.InnerException}";
             isLoading = false;
         }
     }
