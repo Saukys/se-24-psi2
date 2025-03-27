@@ -1,0 +1,13 @@
+@startuml Game Session State Diagram
+
+[*] --> Waiting : Game Initialized
+
+Waiting --> Started : startGame()
+Started --> Paused : pauseGame()
+Paused --> Started : resumeGame()
+Started --> Failed : timeExpired / wrongAnswer
+Started --> Finished : allTasksCompleted / correctAnswer
+Failed --> [*]
+Finished --> [*]
+
+@enduml

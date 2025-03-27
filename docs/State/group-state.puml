@@ -1,0 +1,11 @@
+@startuml Group Management State Diagram
+
+[*] --> Empty : groupCreated
+
+Empty --> Active : memberAdded
+Active --> Active : memberAdded
+Active --> Empty : allMembersRemoved
+Empty --> [*] : groupDeleted
+Active --> [*] : groupDeleted
+
+@enduml

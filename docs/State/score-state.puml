@@ -1,0 +1,14 @@
+@startuml Score Processing State Diagram
+
+[*] --> Pending
+
+Pending --> Calculating : gameCompleted
+Calculating --> Validating : rawScoreComputed
+Validating --> Rejected : invalidScore
+Validating --> Accepted : validScore
+Rejected --> [*] : notifyUser
+Accepted --> Updating : updateLeaderboard
+Updating --> Completed : leaderboardUpdated
+Completed --> [*]
+
+@enduml

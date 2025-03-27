@@ -1,0 +1,16 @@
+@startuml Game Level State Diagram
+
+[*] --> Loading : initializeLevel
+
+Loading --> Ready : resourcesLoaded
+Loading --> Error : loadingFailed
+Ready --> InProgress : playerStarted
+InProgress --> Paused : playerPaused
+Paused --> InProgress : playerResumed
+InProgress --> Completed : objectivesAchieved
+InProgress --> Failed : playerFailed
+Error --> [*]
+Failed --> [*]
+Completed --> [*]
+
+@enduml 

@@ -1,0 +1,316 @@
+@startuml
+' Style settings
+left to right direction
+' Existing Components
+package "Game Components" {
+    class Game <<Entity>> {
+        +game_id: UUID
+        +title: VARCHAR(100)
+        +scoring_rules: JSONB
+        +difficulty: VARCHAR(50)
+        +game_type: ENUM(finder,reading)
+        +startGame()
+        +endGame()
+        +validateGame()
+    }
+
+    class FinderGame {
+        +image_path: VARCHAR(255)
+        +target_objects: List<GameObject>
+        +time_limit: INT
+        +validateObjectPosition()
+    }
+
+    class ReadingGame {
+        +text_content: TEXT
+        +questions: List<ReadingQuestion>
+        +time_limit: INT
+        +validateAnswer()
+    }
+
+    class GameObject {
+        +object_id: UUID
+        +name: VARCHAR(100)
+        +image_path: VARCHAR(255)
+        +position_x: INT
+        +position_y: INT
+        +is_found: BOOLEAN
+        +updatePosition()
+    }
+
+    class ReadingQuestion {
+        +question_id: UUID
+        +question_text: TEXT
+        +correct_answer: TEXT
+        +points: INT
+        +validateAnswer()
+    }
+    class Achievement {
+        +achievement_id: UUID
+        +game_id: UUID
+        +name: VARCHAR(100)
+        +description: TEXT
+        +points: INT
+    }
+    class ToBeGames {}
+    class ToBeGameObject {}
+}
+
+package "Core Domain" {
+    class User {
+        +user_id: UUID
+        +email: VARCHAR(255)
+        +hashed_password: TEXT
+        +salt: TEXT
+        +streak_count: INT
+        +total_score: INT
+        +last_login: TIMESTAMP
+        +role: ENUM(player,institutional_admin)
+        +login()
+        +logout()
+        +updateStreak()
+        +resetPassword()
+    }
+
+    class Score {
+        +score_id: UUID
+        +user_id: UUID
+        +game_id: UUID
+        +points: INT
+        +timestamp: TIMESTAMP
+        +validate()
+        +calculate()
+    }
+
+    class GameSession {
+        +session_id: UUID
+        +user_id: UUID
+        +game_id: UUID
+        +start_time: TIMESTAMP
+        +end_time: TIMESTAMP
+        +state: GameState
+        +final_score: INT
+        +calculateDuration()
+        +updateState()
+    }
+}
+
+
+' Planned/Future Components
+package "Institution Management" {
+    class Institution {
+        +institution_id: UUID
+        +name: VARCHAR(255)
+        +address: VARCHAR(255)
+        +contact_email: VARCHAR(255)
+        +createGroup()
+        +updateDetails()
+        +manageAdmins()
+    }
+
+    class Group {
+        +group_id: UUID
+        +name: VARCHAR(100)
+        +institution_id: UUID
+        +created_at: TIMESTAMP
+        +status: GroupState
+        +addMember()
+        +removeMember()
+        +updateGroupInfo()
+    }
+
+    class GroupMembership {
+        +membership_id: UUID
+        +user_id: UUID
+        +group_id: UUID
+        +joined_at: TIMESTAMP
+        +role: ENUM(member,leader)
+    }
+
+}
+
+package "Analytics & Reporting" {
+    class UserProgress {
+        +progress_id: UUID
+        +user_id: UUID
+        +game_type: VARCHAR(50)
+        +total_games: INT
+        +average_score: FLOAT
+        +best_score: INT
+        +calculateProgress()
+        +updateStats()
+    }
+
+    class GroupStats {
+        +stats_id: UUID
+        +group_id: UUID
+        +total_members: INT
+        +active_members: INT
+        +average_score: FLOAT
+        +updateStats()
+        +generateReport()
+    }
+
+    class LeaderboardEntry {
+        +entry_id: UUID
+        +user_id: UUID
+        +game_id: UUID
+        +score: INT
+        +rank: INT
+        +timestamp: TIMESTAMP
+        +updateRank()
+    }
+}
+
+package "Services" {
+    interface IGameService {
+        +initializeGame(gameType: string)
+        +processGameState(sessionId: UUID)
+        +validateGameRules(gameId: UUID)
+        +calculateScore(sessionId: UUID)
+    }
+
+    interface IScoreService {
+        +validateScore(score: Score)
+        +calculateFinalScore(sessionId: UUID)
+        +updateLeaderboard(score: Score)
+        +processStreaks(userId: UUID)
+    }
+
+    interface IUserService {
+        +authenticateUser(email: string, password: string)
+        +registerUser(user: User)
+        +updateUserProfile(userId: UUID)
+        +manageUserRoles(userId: UUID)
+    }
+
+    interface IGroupService {
+        +createGroup(group: Group)
+        +addMember(groupId: UUID, userId: UUID)
+        +removeMember(membershipId: UUID)
+        +updateGroupStatus(groupId: UUID)
+    }
+}
+
+package "Controllers" {
+    class GameController {
+        -_gameService: IGameService
+        -_scoreService: IScoreService
+        +getGames(): List<Game>
+        +getGameById(id: UUID): Game
+        +startGame(gameId: UUID): GameSession
+        +endGame(sessionId: UUID): Score
+    }
+
+    
+
+    class ScoreController {
+        -_scoreService: IScoreService
+        +getScores(): List<Score>
+        +getScoresByGame(gameId: UUID): List<Score>
+        +getScoreById(id: UUID): Score
+        +saveScore(score: Score): Score
+    }
+
+    class UserController {
+        -_userService: IUserService
+        +register(user: User): User
+        +login(credentials: LoginDto): Token
+        +updateProfile(userId: UUID, profile: ProfileDto): User
+        +resetPassword(email: string): void
+    }
+
+    class GroupController {
+        -_groupService: IGroupService
+        +createGroup(group: Group): Group
+        +getGroups(): List<Group>
+        +addMember(groupId: UUID, userId: UUID): void
+        +removeMember(groupId: UUID, userId: UUID): void
+    }
+
+}
+
+
+' Database Context
+class AppDbContext {
+    +Users: DbSet<User>
+    +Games: DbSet<Game>
+    +GameSessions: DbSet<GameSession>
+    +Scores: DbSet<Score>
+    +Groups: DbSet<Group>
+    +GroupMemberships: DbSet<GroupMembership>
+    +Institutions: DbSet<Institution>
+    +LeaderboardEntries: DbSet<LeaderboardEntry>
+}
+
+' Relationships
+Game <|-- FinderGame
+Game <|-- ReadingGame
+Game <|-- ToBeGames
+ToBeGames <|-- ToBeGameObject
+FinderGame "1" *-- "*" GameObject
+ReadingGame "1" *-- "*" ReadingQuestion
+User "1" -- "*" Score
+User "1" -- "*" GameSession
+User "*" -- "*" Group : through GroupMembership
+Game "1" -- "*" GameSession
+Game "1" -- "*" Score
+Institution "1" -- "*" Group
+Group "1" -- "*" GroupMembership
+User "1" -- "*" GroupMembership
+Group "1" -- "1" GroupStats
+User "1" -- "1" UserProgress
+User "1" -- "*" LeaderboardEntry
+
+' Service Dependencies
+IGameService ..> Game
+IScoreService ..> Score
+IUserService ..> User
+IGroupService ..> Group
+
+' Achievement Dependencies
+Achievement "*" -- "1" Game
+
+' Controller Dependencies
+GameController --> IGameService
+GameController --> IScoreService
+ScoreController --> IScoreService
+UserController --> IUserService
+GroupController --> IGroupService
+
+' External Integrations
+package "External Integrations" {
+    interface IEmailService {
+        +sendEmail(to: string, subject: string, body: string): void
+        +sendPasswordReset(email: string, resetToken: string): void
+        +sendWelcomeEmail(email: string, username: string): void
+        +sendGroupInvitation(email: string, groupName: string, inviterName: string): void
+        +sendAchievementNotification(email: string, achievementName: string): void
+    }
+
+    class SmtpEmailService {
+        -_smtpClient: SmtpClient
+        -_emailConfig: EmailConfiguration
+        +SmtpEmailService(config: EmailConfiguration)
+        +sendEmail(to: string, subject: string, body: string): void
+        -createEmailMessage(to: string, subject: string, body: string): MailMessage
+    }
+
+    class EmailConfiguration {
+        +smtpServer: string
+        +port: int
+        +username: string
+        +password: string
+        +fromAddress: string
+        +useSsl: boolean
+    }
+}
+
+
+' Add relationships for email service
+SmtpEmailService ..|> IEmailService
+SmtpEmailService --> EmailConfiguration
+IUserService --> IEmailService : uses
+IGroupService --> IEmailService : uses
+UserController --> IEmailService : uses
+@enduml

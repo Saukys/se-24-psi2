@@ -1,0 +1,95 @@
+@startuml
+title Score Processing and Analytics Flow
+
+actor User
+participant ScoreController
+participant ScoreService
+participant UserService
+participant ScoreRepository
+participant LeaderboardEntry
+participant EmailService
+
+== Score Submission ==
+
+User -> ScoreController: submitScore(gameId, score)
+activate ScoreController
+
+ScoreController -> ScoreService: processScore(gameId, userId, score)
+activate ScoreService
+
+ScoreService -> ScoreService: validateScore(score)
+ScoreService -> ScoreRepository: save(score)
+activate ScoreRepository
+ScoreRepository --> ScoreService: savedScore
+deactivate ScoreRepository
+
+ScoreService -> UserService: updateUserStats(userId, score)
+activate UserService
+UserService --> ScoreService: statsUpdated
+deactivate UserService
+
+ScoreService -> ScoreService: processStreaks(userId)
+activate LeaderboardEntry
+
+ScoreService -> LeaderboardEntry: updateLeaderboard(score)
+LeaderboardEntry -> LeaderboardEntry: calculateRank()
+LeaderboardEntry --> ScoreService: leaderboardUpdated
+
+deactivate LeaderboardEntry
+
+alt new achievement unlocked
+    ScoreService -> EmailService: sendAchievementNotification()
+    activate EmailService
+    EmailService --> ScoreService: notificationSent
+    deactivate EmailService
+end
+
+ScoreService --> ScoreController: scoreProcessed
+deactivate ScoreService
+
+ScoreController --> User: scoreSubmitted
+deactivate ScoreController
+
+== Analytics Update ==
+
+ScoreController -> ScoreService: generateAnalytics(userId)
+activate ScoreController
+activate ScoreService
+
+ScoreService -> ScoreRepository: getUserScores(userId)
+activate ScoreRepository
+ScoreRepository --> ScoreService: scores[]
+deactivate ScoreRepository
+
+ScoreService -> ScoreService: calculateStatistics()
+ScoreService -> ScoreService: updateProgressMetrics()
+
+
+
+ScoreService --> ScoreController: analyticsGenerated
+deactivate ScoreService
+
+ScoreController --> User: statisticsUpdated
+deactivate ScoreController
+
+== Leaderboard Retrieval ==
+
+User -> ScoreController: getLeaderboard(gameId)
+activate ScoreController
+
+ScoreController -> ScoreService: fetchLeaderboard(gameId)
+activate ScoreService
+
+ScoreService -> LeaderboardEntry: getTopScores(gameId, limit)
+activate LeaderboardEntry
+LeaderboardEntry --> ScoreService: topScores[]
+deactivate LeaderboardEntry
+
+ScoreService -> ScoreService: formatLeaderboard()
+ScoreService --> ScoreController: leaderboard
+deactivate ScoreService
+
+ScoreController --> User: leaderboardData
+deactivate ScoreController
+
+@enduml 

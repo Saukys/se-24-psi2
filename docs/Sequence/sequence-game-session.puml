@@ -1,0 +1,73 @@
+@startuml
+title Game Session Flow
+
+actor User
+participant GameController
+participant GameService
+participant ScoreService
+participant GameRepository
+participant ScoreRepository
+participant EmailService
+
+User -> GameController: startGame(gameId)
+activate GameController
+
+GameController -> GameService: initializeGame(gameId)
+activate GameService
+
+GameService -> GameRepository: getById(gameId)
+activate GameRepository
+GameRepository --> GameService: game
+deactivate GameRepository
+
+GameService -> GameService: createGameSession()
+GameService --> GameController: gameSession
+deactivate GameService
+
+GameController --> User: gameSessionStarted
+
+User -> GameController: updateGameState(action)
+activate GameController
+
+GameController -> GameService: processGameState(sessionId, action)
+activate GameService
+GameService -> GameService: validateAction()
+GameService -> GameService: updateState()
+GameService --> GameController: updatedState
+deactivate GameService
+
+GameController --> User: stateUpdated
+
+User -> GameController: endGame(sessionId)
+activate GameController
+
+GameController -> GameService: finalizeSession(sessionId)
+activate GameService
+
+GameService -> ScoreService: calculateFinalScore(sessionId)
+activate ScoreService
+ScoreService -> ScoreRepository: save(score)
+activate ScoreRepository
+ScoreRepository --> ScoreService: savedScore
+deactivate ScoreRepository
+
+ScoreService -> ScoreService: updateLeaderboard()
+ScoreService -> ScoreService: checkAchievements()
+
+alt achievement unlocked
+    ScoreService -> EmailService: sendAchievementNotification()
+    activate EmailService
+    EmailService --> ScoreService: notificationSent
+    deactivate EmailService
+end
+
+ScoreService --> GameService: finalScore
+deactivate ScoreService
+
+GameService --> GameController: sessionCompleted
+deactivate GameService
+
+GameController --> User: gameCompleted(score)
+deactivate GameController
+
+@enduml 
