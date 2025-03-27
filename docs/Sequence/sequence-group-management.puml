@@ -1,4 +1,48 @@
 @startuml
+' =============================================
+' Group Management Sequence Diagram
+' =============================================
+' This diagram illustrates the complete flow of group management operations,
+' including creation, member invitation, joining, and status updates.
+'
+' Key Participants:
+' - InstitutionalAdmin: Manages groups and members
+' - User: Joins groups and receives notifications
+' - GroupController: Handles group-related HTTP requests
+' - GroupService: Manages group operations
+' - GroupRepository: Stores group data
+' - UserRepository: Manages user data
+' - EmailService: Sends notifications
+'
+' Main Flows:
+' 1. Group Creation
+'    - Group data validation
+'    - Group storage
+'    - Success notification
+'
+' 2. Member Invitation
+'    - Email validation
+'    - Invitation processing
+'    - Email notifications
+'
+' 3. Member Joining
+'    - Invite validation
+'    - Group capacity check
+'    - Member addition
+'    - Welcome notification
+'
+' 4. Group Status Update
+'    - Status validation
+'    - Group update
+'    - Member notification
+'
+' Key Features:
+' - Group capacity management
+' - Email notifications
+' - Status tracking
+' - Member management
+' =============================================
+
 title Group Management Flow
 
 actor InstitutionalAdmin

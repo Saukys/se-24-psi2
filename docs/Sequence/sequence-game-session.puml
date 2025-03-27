@@ -1,4 +1,34 @@
 @startuml
+' =============================================
+' Game Session Sequence Diagram
+' =============================================
+' This diagram illustrates the flow of a complete game session,
+' from initialization to completion, including score processing
+' and achievement handling.
+'
+' Key Participants:
+' - User: Player interacting with the game
+' - GameController: Handles game-related HTTP requests
+' - GameService: Manages game logic and state
+' - ScoreService: Processes scores and achievements
+' - Repositories: Handle data persistence
+' - EmailService: Sends notifications
+'
+' Main Flow:
+' 1. Game Initialization
+' 2. Game State Updates
+' 3. Game Completion
+' 4. Score Processing
+' 5. Achievement Checking
+' 6. Notification Handling
+'
+' Key Features:
+' - Real-time state updates
+' - Score calculation
+' - Achievement system
+' - Email notifications
+' =============================================
+
 title Game Session Flow
 
 actor User

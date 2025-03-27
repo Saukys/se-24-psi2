@@ -1,4 +1,45 @@
 @startuml
+' =============================================
+' Score Processing and Analytics Sequence Diagram
+' =============================================
+' This diagram illustrates the complete flow of score processing,
+' analytics generation, and leaderboard management in the platform.
+'
+' Key Participants:
+' - User: Player submitting scores and viewing analytics
+' - ScoreController: Handles score-related HTTP requests
+' - ScoreService: Processes scores and manages analytics
+' - UserService: Updates user statistics
+' - ScoreRepository: Stores score data
+' - LeaderboardEntry: Manages leaderboard rankings
+' - EmailService: Sends achievement notifications
+'
+' Main Flows:
+' 1. Score Submission
+'    - Score validation and storage
+'    - User stats update
+'    - Streak processing
+'    - Leaderboard update
+'    - Achievement checking
+'
+' 2. Analytics Update
+'    - Score retrieval
+'    - Statistics calculation
+'    - Progress metrics update
+'
+' 3. Leaderboard Retrieval
+'    - Top scores fetching
+'    - Leaderboard formatting
+'    - Data presentation
+'
+' Key Features:
+' - Real-time score processing
+' - User statistics tracking
+' - Achievement system integration
+' - Analytics generation
+' - Leaderboard management
+' =============================================
+
 title Score Processing and Analytics Flow
 
 actor User

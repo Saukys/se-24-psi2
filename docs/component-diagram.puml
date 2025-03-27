@@ -1,0 +1,205 @@
+@startuml
+' =============================================
+' System Component Diagram
+' =============================================
+' This diagram illustrates the high-level architecture of the educational game platform,
+' showing the major components and their interactions.
+'
+' Architecture Overview:
+' - Frontend: User-facing interfaces for games, user management, and analytics
+' - Backend: Core business logic, API gateway, and data services
+' - External: Third-party services for email, notifications, and storage
+' - Database: Central data storage system
+'
+' Key Features:
+' - Modular component design
+' - Clear separation of concerns
+' - Scalable architecture
+' - External service integration
+' - Comprehensive documentation
+' =============================================
+
+title System Component Diagram
+
+' Style settings
+skinparam component {
+    BackgroundColor White
+    BorderColor Black
+}
+
+' Main interfaces
+interface "HTTP/REST API" as restAPI
+interface "Data Access" as dataAccess
+interface "External Services" as externalAPI
+
+' Main Components
+package "Frontend" {
+    component "Game Interface" as gameUI
+    component "User Interface" as userUI
+    component "Analytics Interface" as analyticsUI
+}
+
+package "Backend" {
+    component "API Gateway" as apiGateway
+    component "Business Services" as businessServices
+    component "Data Services" as dataServices
+}
+
+package "External" {
+    component "Email Service" as emailService
+    component "Notification Service" as notifyService
+    component "Storage Service" as storageService
+}
+
+database "Database" as db
+
+' Connections
+gameUI ..> restAPI : uses
+userUI ..> restAPI : uses
+analyticsUI ..> restAPI : uses
+restAPI - apiGateway
+apiGateway ..> businessServices : uses
+businessServices ..> dataServices : uses
+dataServices ..> dataAccess : implements
+dataAccess - db
+businessServices ..> externalAPI : uses
+externalAPI - emailService
+externalAPI - notifyService
+externalAPI - storageService
+
+' Detailed Notes
+note right of gameUI
+  Game Interface Component
+  ----------------------
+  Responsibilities:
+  - Game UI rendering
+  - User interaction handling
+  - Game state management
+  - Score display
+  - Progress tracking
+  - Real-time updates
+  
+  Features:
+  - Finder game interface
+  - Reading game interface
+  - Block game interface
+  - Level selection
+  - Difficulty settings
+end note
+
+note right of userUI
+  User Interface Component
+  -----------------------
+  Responsibilities:
+  - User authentication
+  - Profile management
+  - Navigation system
+  - Institution management
+  - Group handling
+  
+  Features:
+  - Login/Registration
+  - User dashboard
+  - Institution dashboard
+  - Group management
+  - Settings management
+end note
+
+note right of analyticsUI
+  Analytics Interface Component
+  ---------------------------
+  Responsibilities:
+  - Progress visualization
+  - Statistics display
+  - Achievement tracking
+  - Performance metrics
+  
+  Features:
+  - Progress charts
+  - Achievement display
+  - Leaderboard
+  - Group statistics
+  - Performance reports
+end note
+
+note right of apiGateway
+  API Gateway Component
+  -------------------
+  Responsibilities:
+  - Request routing
+  - Authentication
+  - Rate limiting
+  - Request validation
+  
+  Features:
+  - REST API endpoints
+  - Request/Response handling
+  - Error management
+  - Security enforcement
+end note
+
+note right of businessServices
+  Business Services Component
+  -------------------------
+  Responsibilities:
+  - Business logic processing
+  - Game mechanics
+  - Score calculation
+  - User management
+  
+  Features:
+  - Game service
+  - User service
+  - Score service
+  - Analytics service
+  - Institution service
+end note
+
+note right of dataServices
+  Data Services Component
+  ---------------------
+  Responsibilities:
+  - Data persistence
+  - Data retrieval
+  - Data validation
+  - Data transformation
+  
+  Features:
+  - Repository pattern
+  - Data access layer
+  - Entity management
+  - Query optimization
+end note
+
+note right of "External"
+  External Services
+  ----------------
+  Responsibilities:
+  - Email notifications
+  - Push notifications
+  - File storage
+  - External integrations
+  
+  Features:
+  - Email delivery
+  - Real-time notifications
+  - File management
+  - CDN integration
+end note
+
+note right of db
+  Database
+  --------
+  Responsibilities:
+  - Data storage
+  - Data integrity
+  - Data relationships
+  
+  Features:
+  - User data
+  - Game data
+  - Score data
+  - Analytics data
+  - Institution data
+end note
+@enduml

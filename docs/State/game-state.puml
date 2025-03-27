@@ -1,4 +1,31 @@
-@startuml Game Session State Diagram
+@startuml
+' =============================================
+' Game Session State Diagram
+' =============================================
+' This diagram illustrates the possible states of a game session
+' and the transitions between them.
+'
+' States:
+' - Waiting: Initial state before game starts
+' - Started: Game is in progress
+' - Paused: Game temporarily suspended
+' - Failed: Game ended due to failure
+' - Finished: Game completed successfully
+'
+' Transitions:
+' - Game Initialization: Entry point to Waiting state
+' - startGame(): Begins the game session
+' - pauseGame(): Temporarily stops the game
+' - resumeGame(): Continues a paused game
+' - timeExpired/wrongAnswer: Ends game in failure
+' - allTasksCompleted/correctAnswer: Completes game successfully
+'
+' Key Features:
+' - Pause/Resume functionality
+' - Multiple failure conditions
+' - Success conditions
+' - Clean state transitions
+' =============================================
 
 [*] --> Waiting : Game Initialized
 

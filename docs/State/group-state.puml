@@ -1,4 +1,26 @@
-@startuml Group Management State Diagram
+@startuml
+' =============================================
+' Group Management State Diagram
+' =============================================
+' This diagram illustrates the possible states of a group
+' and the transitions between them.
+'
+' States:
+' - Empty: Group created but no members
+' - Active: Group has at least one member
+'
+' Transitions:
+' - groupCreated: Initial group creation
+' - memberAdded: Adds member to group
+' - allMembersRemoved: Removes all members
+' - groupDeleted: Removes the group
+'
+' Key Features:
+' - Simple state model
+' - Member management
+' - Group lifecycle
+' - Clean state transitions
+' =============================================
 
 [*] --> Empty : groupCreated
 

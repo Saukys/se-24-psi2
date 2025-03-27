@@ -1,4 +1,29 @@
 @startuml
+' =============================================
+' System Use Case Diagram
+' =============================================
+' This diagram illustrates the functional requirements and user interactions
+' of the educational game platform from a user's perspective.
+'
+' Key Actors:
+' - User: Primary platform user (player)
+' - Email System: External notification system
+' - Institutions: Educational organizations
+'
+' Main Features:
+' - Leaderboard System: View, filter, and search rankings
+' - Game Module: Browse, play, and submit scores
+' - User Management: Registration, authentication, profile
+' - Groups Module: Group creation and management
+' - Streak System: Track and reward user engagement
+' - External Integrations: Email notifications
+'
+' Relationships:
+' - Include: Required use cases (e.g., playing includes scoring)
+' - Extend: Optional extensions (e.g., streak rewards)
+' - Trigger: Event-based relationships
+' =============================================
+
 left to right direction
 
 actor User as U

@@ -1,4 +1,35 @@
-@startuml Game Level State Diagram
+@startuml
+' =============================================
+' Game Level State Diagram
+' =============================================
+' This diagram illustrates the possible states of a game level
+' and the transitions between them.
+'
+' States:
+' - Loading: Initial state while loading level resources
+' - Ready: Level loaded and ready for player interaction
+' - InProgress: Player actively playing the level
+' - Paused: Level temporarily suspended
+' - Completed: Level finished successfully
+' - Failed: Level ended due to failure
+' - Error: Resource loading failed
+'
+' Transitions:
+' - initializeLevel: Entry point to Loading state
+' - resourcesLoaded: Successfully loaded all resources
+' - loadingFailed: Failed to load required resources
+' - playerStarted: Player begins the level
+' - playerPaused: Player temporarily stops
+' - playerResumed: Player continues after pause
+' - objectivesAchieved: All level goals completed
+' - playerFailed: Player failed to complete level
+'
+' Key Features:
+' - Resource loading management
+' - Pause/Resume functionality
+' - Multiple completion conditions
+' - Error handling
+' =============================================
 
 [*] --> Loading : initializeLevel
 

@@ -1,0 +1,104 @@
+@startuml
+' =============================================
+' System Deployment Diagram
+' =============================================
+' This diagram illustrates the physical deployment architecture of the educational game platform,
+' showing how different components are distributed across various environments.
+'
+' Deployment Overview:
+' - Client Side: Web browser-based Blazor frontend
+' - Azure Cloud: Core application services and data storage
+' - Development: Tools and environments for development
+'
+' Infrastructure Components:
+' - App Service: Hosts the .NET Core API
+' - SQL Database: Stores application data
+' - Blob Storage: Manages game assets
+' - Development Tools: IDE and testing environment
+'
+' Communication:
+' - HTTPS for client-server communication
+' - Secure data access between services
+' - Deployment pipeline from development
+' =============================================
+
+title System Deployment Diagram (Core Components)
+
+' Style settings
+skinparam node {
+    BackgroundColor White
+    BorderColor Black
+}
+
+skinparam database {
+    BackgroundColor White
+    BorderColor Black
+}
+
+' Client Side
+node "Client Device" as client {
+    node "Web Browser" {
+        [Blazor Frontend]
+    }
+}
+
+' Azure Cloud Platform
+cloud "Azure Cloud Platform" {
+    node "App Service" as appService {
+        [.NET Core API]
+    }
+
+    node "Data Storage" as storage {
+        database "SQL Database" {
+            [Application Data]
+        }
+        database "Blob Storage" {
+            [Game Assets]
+        }
+    }
+}
+
+' Development
+node "Development" as dev {
+    [Development Tools]
+    [Testing Tools]
+}
+
+' Communication Paths
+client --> appService : HTTPS
+appService --> storage : Data Access
+dev --> appService : Deploy
+
+' Core Notes
+note right of client
+  Core Features:
+  - Game Modules (Finder, Reading, Block)
+  - User Interface
+  - Authentication
+  - Game State Management
+end note
+
+note right of appService
+  Backend Features:
+  - Game Logic
+  - User Management
+  - Data Processing
+  - API Endpoints
+end note
+
+note right of storage
+  Data Storage:
+  - User Data
+  - Game Data
+  - Level Files
+  - Media Assets
+end note
+
+note right of dev
+  Development:
+  - IDE & Tools
+  - Testing Suite
+  - Deployment Pipeline
+end note
+
+@enduml 

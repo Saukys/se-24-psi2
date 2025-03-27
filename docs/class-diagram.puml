@@ -1,4 +1,27 @@
 @startuml
+' =============================================
+' Class Diagram for Educational Game Platform
+' =============================================
+' This diagram represents the core structure of the educational game platform,
+' including game components, user management, institution management,
+' analytics, and service interfaces.
+'
+' Key Components:
+' - Game Components: Core game types and their associated entities
+' - Core Domain: Essential user and game session management
+' - Institution Management: Organization and group management
+' - Analytics & Reporting: Progress tracking and statistics
+' - Services: Interface definitions for business logic
+' - Controllers: API endpoints and request handling
+' - External Integrations: Email service and configurations
+'
+' Relationships:
+' - Inheritance: Game types inherit from base Game class
+' - Composition: Games contain various game-specific objects
+' - Associations: User-Game relationships through sessions and scores
+' - Dependencies: Service interfaces and their implementations
+' =============================================
+
 ' Style settings
 left to right direction
 ' Existing Components
@@ -8,7 +31,7 @@ package "Game Components" {
         +title: VARCHAR(100)
         +scoring_rules: JSONB
         +difficulty: VARCHAR(50)
-        +game_type: ENUM(finder,reading)
+        +game_type: ENUM(finder,reading,block)
         +startGame()
         +endGame()
         +validateGame()
@@ -19,6 +42,7 @@ package "Game Components" {
         +target_objects: List<GameObject>
         +time_limit: INT
         +validateObjectPosition()
+        +calculateScore()
     }
 
     class ReadingGame {
@@ -26,6 +50,15 @@ package "Game Components" {
         +questions: List<ReadingQuestion>
         +time_limit: INT
         +validateAnswer()
+        +calculateScore()
+    }
+
+    class BlockGame {
+        +pattern: List<Block>
+        +sequence_length: INT
+        +time_limit: INT
+        +validateSequence()
+        +calculateScore()
     }
 
     class GameObject {
@@ -45,15 +78,24 @@ package "Game Components" {
         +points: INT
         +validateAnswer()
     }
+
+    class Block {
+        +block_id: UUID
+        +color: VARCHAR(50)
+        +position: INT
+        +is_active: BOOLEAN
+        +updateState()
+    }
+
     class Achievement {
         +achievement_id: UUID
         +game_id: UUID
         +name: VARCHAR(100)
         +description: TEXT
         +points: INT
+        +unlockCondition: TEXT
+        +checkUnlock()
     }
-    class ToBeGames {}
-    class ToBeGameObject {}
 }
 
 package "Core Domain" {
@@ -137,6 +179,7 @@ package "Analytics & Reporting" {
         +total_games: INT
         +average_score: FLOAT
         +best_score: INT
+        +streak_count: INT
         +calculateProgress()
         +updateStats()
     }
@@ -190,6 +233,13 @@ package "Services" {
         +removeMember(membershipId: UUID)
         +updateGroupStatus(groupId: UUID)
     }
+
+    interface IAnalyticsService {
+        +trackUserProgress(userId: UUID)
+        +generateGroupStats(groupId: UUID)
+        +updateLeaderboards()
+        +calculateStreaks()
+    }
 }
 
 package "Controllers" {
@@ -228,6 +278,14 @@ package "Controllers" {
         +removeMember(groupId: UUID, userId: UUID): void
     }
 
+    class AnalyticsController {
+        -_analyticsService: IAnalyticsService
+        +getUserProgress(userId: UUID): UserProgress
+        +getGroupStats(groupId: UUID): GroupStats
+        +getLeaderboard(gameId: UUID): List<LeaderboardEntry>
+        +getStreaks(userId: UUID): int
+    }
+
 }
 
 
@@ -241,22 +299,25 @@ class AppDbContext {
     +GroupMemberships: DbSet<GroupMembership>
     +Institutions: DbSet<Institution>
     +LeaderboardEntries: DbSet<LeaderboardEntry>
+    
 }
 
 ' Relationships
 Game <|-- FinderGame
 Game <|-- ReadingGame
+Game <|-- BlockGame
 Game <|-- ToBeGames
 ToBeGames <|-- ToBeGameObject
-FinderGame "1" *-- "*" GameObject
-ReadingGame "1" *-- "*" ReadingQuestion
-User "1" -- "*" Score
-User "1" -- "*" GameSession
+FinderGame "1" *-- "many" GameObject
+ReadingGame "1" *-- "many" ReadingQuestion
+BlockGame "1" *-- "many" Block
+User "1" -- "many" Score
+User "1" -- "many" GameSession
 User "*" -- "*" Group : through GroupMembership
-Game "1" -- "*" GameSession
-Game "1" -- "*" Score
-Institution "1" -- "*" Group
-Group "1" -- "*" GroupMembership
+Game "1" -- "many" Score
+Game "1" -- "many" Achievement
+Institution "1" -- "many" Group
+Group "1" -- "many" GroupMembership
 User "1" -- "*" GroupMembership
 Group "1" -- "1" GroupStats
 User "1" -- "1" UserProgress

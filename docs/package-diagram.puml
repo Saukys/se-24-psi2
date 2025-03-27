@@ -1,0 +1,185 @@
+@startuml
+' =============================================
+' System Package Diagram
+' =============================================
+' This diagram represents the logical organization of the educational game platform's codebase,
+' showing the main packages and their dependencies.
+'
+' Package Structure:
+' - Frontend: UI components and core frontend services
+' - Backend: API, business logic, and data access
+' - Shared: Common domain models and utilities
+' - Tests: Comprehensive test suite
+'
+' Key Dependencies:
+' - Frontend and Backend depend on Shared package
+' - Tests depend on Backend and Shared packages
+' - Internal package dependencies follow clean architecture
+'
+' Package Organization:
+' - Clear separation of concerns
+' - Modular design
+' - Testable architecture
+' - Shared code reuse
+' =============================================
+
+title System Package Diagram (Abstract View)
+left to right direction
+
+' Main Solution
+package "se-24.frontend" {
+    package "UI" {
+        [Pages]
+        [Components]
+    }
+
+    package "Core" {
+        [Services]
+        [State]
+    }
+}
+
+package "se-24.backend" {
+    package "API" {
+        [Controllers]
+    }
+
+    package "Business" {
+        [Services]
+        [Configuration]
+    }
+
+    package "Data" {
+        [Repositories]
+        [Context]
+    }
+}
+
+package "se-24.shared" {
+    package "Domain" {
+        [Models]
+        [Interfaces]
+    }
+
+    package "Common" {
+        [Utils]
+    }
+}
+
+package "se-24.tests" {
+    [UnitTests]
+    [IntegrationTests]
+    [E2ETests]
+}
+
+' Dependencies
+"se-24.frontend" ..> "se-24.shared"
+"se-24.backend" ..> "se-24.shared"
+"se-24.tests" ..> "se-24.backend"
+"se-24.tests" ..> "se-24.shared"
+
+"UI" ..> "Core"
+"API" ..> "Business"
+"Business" ..> "Data"
+"Data" ..> "Domain"
+
+' Detailed Notes
+note right of "UI"
+  Pages:
+  - Games (Finder, Reading, Block)
+  - Home, Leaderboard, Profile
+  - Group & Institution Management
+
+  Components:
+  - Layout (MainLayout, NavMenu)
+  - Game Components (Level Selection,
+    Score Display, Game Board, Timer)
+  - Shared (Auth, Error Handling)
+end note
+
+note right of "Core"
+  Services:
+  - Game State & Score Management
+  - Authentication & Authorization
+  - Group & Institution Services
+  - User Progress & Analytics
+
+  State:
+  - Game Sessions
+  - User Authentication
+  - Progress Tracking
+  - Group Memberships
+end note
+
+note right of "API"
+  Controllers:
+  - Game & Level Management
+  - User & Authentication
+  - Score & Analytics
+  - Group & Institution
+end note
+
+note right of "Business"
+  Services:
+  - Game & Level Management
+  - User & Authentication
+  - Score Processing
+  - Analytics
+  - Institution Management
+
+  Configuration:
+  - App Settings
+  - Dependency Injection
+  - Auth & Database Config
+end note
+
+note right of "Data"
+  Repositories:
+  - Score & Game
+  - User & Group
+  - Institution
+  - Analytics
+  - Level Files
+
+  Context:
+  - App & Game DB Contexts
+end note
+
+note right of "Domain"
+  Models:
+  - Game (Level, Score, State)
+  - Domain (User, Group, Institution)
+  - Progress & Analytics
+
+  Interfaces:
+  - Repository & Service Contracts
+  - Game & Level Management
+  - User & Institution Management
+end note
+
+note right of "Common"
+  Utilities:
+  - Constants & Enums
+  - Validators
+  - Username Generation
+  - Exception Handling
+end note
+
+note right of "se-24.tests"
+  Unit Tests:
+  - Services & Controllers
+  - Repositories
+  - Game Logic
+  - Authentication
+
+  Integration Tests:
+  - API & Database
+  - Game & User Flows
+
+  E2E Tests:
+  - Game Play
+  - User Journeys
+  - Institution Management
+end note
+
+@enduml
