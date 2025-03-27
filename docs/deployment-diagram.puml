@@ -30,11 +30,6 @@ skinparam node {
     BorderColor Black
 }
 
-skinparam database {
-    BackgroundColor White
-    BorderColor Black
-}
-
 ' Client Side
 node "Client Device" as client {
     node "Web Browser" {
@@ -56,6 +51,10 @@ cloud "Azure Cloud Platform" {
             [Game Assets]
         }
     }
+
+    node "External Services" as external {
+        [Email Service]
+    }
 }
 
 ' Development
@@ -67,6 +66,7 @@ node "Development" as dev {
 ' Communication Paths
 client --> appService : HTTPS
 appService --> storage : Data Access
+appService --> external : Service Integration
 dev --> appService : Deploy
 
 ' Core Notes
@@ -94,11 +94,15 @@ note right of storage
   - Media Assets
 end note
 
+note right of external
+  External Services:
+  - Email Delivery
+end note
+
 note right of dev
   Development:
   - IDE & Tools
   - Testing Suite
   - Deployment Pipeline
 end note
-
-@enduml 
+@enduml

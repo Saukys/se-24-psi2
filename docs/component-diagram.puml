@@ -34,9 +34,11 @@ interface "External Services" as externalAPI
 
 ' Main Components
 package "Frontend" {
-    component "Game Interface" as gameUI
-    component "User Interface" as userUI
-    component "Analytics Interface" as analyticsUI
+    component "Blazor Frontend" as frontend {
+        component "Game Interface" as gameUI
+        component "User Interface" as userUI
+        component "Analytics Interface" as analyticsUI
+    }
 }
 
 package "Backend" {

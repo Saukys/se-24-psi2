@@ -306,8 +306,6 @@ class AppDbContext {
 Game <|-- FinderGame
 Game <|-- ReadingGame
 Game <|-- BlockGame
-Game <|-- ToBeGames
-ToBeGames <|-- ToBeGameObject
 FinderGame "1" *-- "many" GameObject
 ReadingGame "1" *-- "many" ReadingQuestion
 BlockGame "1" *-- "many" Block

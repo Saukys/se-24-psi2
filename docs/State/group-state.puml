@@ -8,16 +8,25 @@
 ' States:
 ' - Empty: Group created but no members
 ' - Active: Group has at least one member
+' - Inviting: Group is in the process of inviting members
+' - Full: Group has reached maximum capacity
+' - Archived: Group is no longer active
 '
 ' Transitions:
 ' - groupCreated: Initial group creation
 ' - memberAdded: Adds member to group
 ' - allMembersRemoved: Removes all members
 ' - groupDeleted: Removes the group
+' - startInviting: Begins member invitation process
+' - invitationComplete: Finishes invitation process
+' - groupFull: Reaches maximum capacity
+' - archiveGroup: Archives inactive group
 '
 ' Key Features:
 ' - Simple state model
 ' - Member management
+' - Invitation system
+' - Capacity control
 ' - Group lifecycle
 ' - Clean state transitions
 ' =============================================
