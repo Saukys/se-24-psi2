@@ -1,136 +1,69 @@
 @startuml
 ' =============================================
-' User Authentication and Registration Sequence Diagram
+' Authentication Sequence Diagram
 ' =============================================
-' This diagram illustrates the complete flow of user authentication
-' operations, including registration, login, and password reset.
-'
-' Key Participants:
-' - User: Platform user performing authentication actions
-' - UserController: Handles authentication HTTP requests
-' - UserService: Manages user authentication logic
-' - UserRepository: Stores user data
-' - EmailService: Sends authentication-related emails
-'
-' Main Flows:
-' 1. Registration
-'    - Email validation
-'    - Password hashing
-'    - User creation
-'    - Welcome email
-'
-' 2. Login
-'    - Credential verification
-'    - Token generation
-'    - Last login update
-'    - Token return
-'
-' 3. Password Reset
-'    - Email validation
-'    - Reset token generation
-'    - Token storage
-'    - Reset email
-'
-' Key Features:
-' - Secure password handling
-' - JWT token authentication
-' - Email notifications
-' - Password reset functionality
+' This diagram shows the flow of user authentication, including:
+' - User registration
+' - User login
+' - Password reset
 ' =============================================
-
-title User Authentication and Registration Flow
 
 actor User
-participant UserController
-participant UserService
-participant UserRepository
-participant EmailService
+participant "UserController" as UserController
+participant "IUserService" as UserService
+participant "IUserRepository" as UserRepository
+participant "IEmailService" as EmailService
 
-== Registration ==
-
-User -> UserController: register(email, password)
+== User Registration ==
+User -> UserController: register(user)
 activate UserController
-
-UserController -> UserService: registerUser(email, password)
+UserController -> UserService: registerUser(user)
 activate UserService
-
-UserService -> UserRepository: getByEmail(email)
-activate UserRepository
-UserRepository --> UserService: null
-deactivate UserRepository
-
 UserService -> UserService: hashPassword()
+UserService -> UserService: setDefaultRole()
 UserService -> UserRepository: save(user)
 activate UserRepository
 UserRepository --> UserService: savedUser
 deactivate UserRepository
-
-UserService -> EmailService: sendWelcomeEmail(email)
+UserService -> EmailService: sendWelcomeEmail(email, username)
 activate EmailService
-EmailService --> UserService: emailSent
+EmailService --> UserService: welcomeSent
 deactivate EmailService
-
-UserService --> UserController: registrationSuccess
+UserService --> UserController: registeredUser
 deactivate UserService
-
-UserController --> User: accountCreated
+UserController --> User: registrationSuccess
 deactivate UserController
 
-== Login ==
-
-User -> UserController: login(email, password)
+== User Login ==
+User -> UserController: login(credentials)
 activate UserController
-
 UserController -> UserService: authenticateUser(email, password)
 activate UserService
-
 UserService -> UserRepository: getByEmail(email)
 activate UserRepository
 UserRepository --> UserService: user
 deactivate UserRepository
-
-UserService -> UserService: verifyPassword()
+UserService -> UserService: validateUserRole()
 UserService -> UserService: generateToken()
-
-UserService -> UserRepository: updateLastLogin()
-activate UserRepository
-UserRepository --> UserService: updated
-deactivate UserRepository
-
-UserService --> UserController: authToken
+UserService --> UserController: token
 deactivate UserService
-
-UserController --> User: loginSuccess(token)
+UserController --> User: loginSuccess
 deactivate UserController
 
 == Password Reset ==
-
 User -> UserController: resetPassword(email)
 activate UserController
-
 UserController -> UserService: initiatePasswordReset(email)
 activate UserService
-
-UserService -> UserRepository: getByEmail(email)
-activate UserRepository
-UserRepository --> UserService: user
-deactivate UserRepository
-
 UserService -> UserService: generateResetToken()
-UserService -> UserRepository: saveResetToken()
-activate UserRepository
-UserRepository --> UserService: saved
-deactivate UserRepository
-
-UserService -> EmailService: sendPasswordReset(email, token)
+UserService -> UserService: saveResetToken()
+UserService -> EmailService: sendPasswordReset(email, resetToken)
 activate EmailService
-EmailService --> UserService: emailSent
+EmailService --> UserService: resetSent
 deactivate EmailService
-
 UserService --> UserController: resetInitiated
 deactivate UserService
-
-UserController --> User: checkEmail
+UserController --> User: resetInstructionsSent
 deactivate UserController
 
 @enduml 

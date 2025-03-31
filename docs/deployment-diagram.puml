@@ -61,6 +61,7 @@ cloud "Azure Cloud Platform" {
 node "Development" as dev {
     [Development Tools]
     [Testing Tools]
+    [CI/CD Pipeline]
 }
 
 ' Communication Paths
@@ -69,40 +70,96 @@ appService --> storage : Data Access
 appService --> external : Service Integration
 dev --> appService : Deploy
 
-' Core Notes
+' Technical Specifications
 note right of client
-  Core Features:
-  - Game Modules (Finder, Reading, Block)
-  - User Interface
-  - Authentication
-  - Game State Management
+  Client Specifications:
+  --------------------
+  Hardware:
+  - CPU: 2+ cores
+  - RAM: 4GB minimum
+  - Storage: 10GB free space
+  
+  Software:
+  - Browser: Chrome 90+, Firefox 90+, Edge 90+
+  - WebGL support
+  - JavaScript enabled
+  
+  Network:
+  - 5Mbps minimum bandwidth
+  - Stable internet connection
 end note
 
 note right of appService
-  Backend Features:
-  - Game Logic
-  - User Management
-  - Data Processing
-  - API Endpoints
+  App Service Specifications:
+  -------------------------
+  Runtime:
+  - .NET 7.0
+  - ASP.NET Core
+  - Blazor Server
+  
+  Resources:
+  - CPU: 2+ cores
+  - RAM: 4GB minimum
+  - Storage: 50GB SSD
+  
+  Scaling:
+  - Auto-scaling enabled
+  - Max instances: 10
+  - Min instances: 2
+  
+  Security:
+  - SSL/TLS 1.2+
+  - Azure AD integration
+  - API key authentication
 end note
 
 note right of storage
-  Data Storage:
-  - User Data
-  - Game Data
-  - Level Files
-  - Media Assets
+  Data Storage Specifications:
+  -------------------------
+  SQL Database:
+  - Azure SQL Database
+  - S3 tier (Standard)
+  - 100GB storage
+  - Geo-replication enabled
+  
+  Blob Storage:
+  - Azure Blob Storage
+  - Hot tier
+  - 500GB storage
+  - CDN integration
+  
+  Backup:
+  - Daily full backup
+  - Point-in-time recovery
+  - 30-day retention
 end note
 
 note right of external
-  External Services:
-  - Email Delivery
+  External Services Specifications:
+  -----------------------------
+  Email Service:
+  - Azure SendGrid
+  - 100k emails/day
+  - Template support
 end note
 
 note right of dev
-  Development:
-  - IDE & Tools
-  - Testing Suite
-  - Deployment Pipeline
+  Development Environment:
+  ----------------------
+  Development Tools:
+  - Visual Studio 2022
+  - Azure DevOps
+  - Docker Desktop
+  
+  Testing Tools:
+  - xUnit
+  - Selenium
+  - JMeter
+  
+  CI/CD Pipeline:
+  - GitHub Actions
+  - Test and Build
+  - Deploy to Azure Cloud
 end note
+
 @enduml

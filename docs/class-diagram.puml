@@ -24,7 +24,8 @@
 
 ' Style settings
 left to right direction
-' Existing Components
+
+' Game Components
 package "Game Components" {
     class Game <<Entity>> {
         +game_id: UUID
@@ -35,6 +36,8 @@ package "Game Components" {
         +startGame()
         +endGame()
         +validateGame()
+        +loadResources()
+        +validateGameState()
     }
 
     class FinderGame {
@@ -98,6 +101,7 @@ package "Game Components" {
     }
 }
 
+' Core Domain
 package "Core Domain" {
     class User {
         +user_id: UUID
@@ -133,12 +137,10 @@ package "Core Domain" {
         +state: GameState
         +final_score: INT
         +calculateDuration()
-        +updateState()
     }
 }
 
-
-' Planned/Future Components
+' Institution Management
 package "Institution Management" {
     class Institution {
         +institution_id: UUID
@@ -168,9 +170,9 @@ package "Institution Management" {
         +joined_at: TIMESTAMP
         +role: ENUM(member,leader)
     }
-
 }
 
+' ANALYTICS & REPORTING
 package "Analytics & Reporting" {
     class UserProgress {
         +progress_id: UUID
@@ -192,6 +194,7 @@ package "Analytics & Reporting" {
         +average_score: FLOAT
         +updateStats()
         +generateReport()
+        +initializeStats()
     }
 
     class LeaderboardEntry {
@@ -205,12 +208,20 @@ package "Analytics & Reporting" {
     }
 }
 
+' SERVICES
 package "Services" {
     interface IGameService {
         +initializeGame(gameType: string)
         +processGameState(sessionId: UUID)
         +validateGameRules(gameId: UUID)
         +calculateScore(sessionId: UUID)
+        +createGameSession()
+        +loadResources()
+        +validateGameState()
+        +validateAction()
+        +updateState()
+        +finalizeSession()
+        +checkAchievements(sessionId: UUID)
     }
 
     interface IScoreService {
@@ -218,6 +229,11 @@ package "Services" {
         +calculateFinalScore(sessionId: UUID)
         +updateLeaderboard(score: Score)
         +processStreaks(userId: UUID)
+        +processScore(gameId: UUID, userId: UUID, score: Score)
+        +calculateStatistics()
+        +formatLeaderboard()
+        +fetchLeaderboard(gameId: UUID)
+        +generateAnalytics(userId: UUID)
     }
 
     interface IUserService {
@@ -225,6 +241,13 @@ package "Services" {
         +registerUser(user: User)
         +updateUserProfile(userId: UUID)
         +manageUserRoles(userId: UUID)
+        +hashPassword()
+        +setDefaultRole()
+        +validateUserRole()
+        +generateToken()
+        +generateResetToken()
+        +saveResetToken()
+        +initiatePasswordReset(email: string)
     }
 
     interface IGroupService {
@@ -232,6 +255,10 @@ package "Services" {
         +addMember(groupId: UUID, userId: UUID)
         +removeMember(membershipId: UUID)
         +updateGroupStatus(groupId: UUID)
+        +processMemberInvitations(groupId: UUID, emails: string[])
+        +processJoinRequest(groupId: UUID, userId: UUID)
+        +updateMemberCount(groupId: UUID)
+        +updateGroupStats(groupId: UUID)
     }
 
     interface IAnalyticsService {
@@ -242,6 +269,7 @@ package "Services" {
     }
 }
 
+' Controllers
 package "Controllers" {
     class GameController {
         -_gameService: IGameService
@@ -250,9 +278,8 @@ package "Controllers" {
         +getGameById(id: UUID): Game
         +startGame(gameId: UUID): GameSession
         +endGame(sessionId: UUID): Score
+        +updateGameState(action): GameState
     }
-
-    
 
     class ScoreController {
         -_scoreService: IScoreService
@@ -260,6 +287,9 @@ package "Controllers" {
         +getScoresByGame(gameId: UUID): List<Score>
         +getScoreById(id: UUID): Score
         +saveScore(score: Score): Score
+        +submitScore(gameId: UUID, score: Score): Score
+        +generateAnalytics(userId: UUID): UserProgress
+        +getLeaderboard(gameId: UUID): List<LeaderboardEntry>
     }
 
     class UserController {
@@ -276,6 +306,9 @@ package "Controllers" {
         +getGroups(): List<Group>
         +addMember(groupId: UUID, userId: UUID): void
         +removeMember(groupId: UUID, userId: UUID): void
+        +inviteMembers(groupId: UUID, emails: string[]): void
+        +joinGroup(groupId: UUID, inviteToken: string): void
+        +updateGroupStatus(groupId: UUID, status: GroupState): void
     }
 
     class AnalyticsController {
@@ -285,59 +318,9 @@ package "Controllers" {
         +getLeaderboard(gameId: UUID): List<LeaderboardEntry>
         +getStreaks(userId: UUID): int
     }
-
 }
 
-
-' Database Context
-class AppDbContext {
-    +Users: DbSet<User>
-    +Games: DbSet<Game>
-    +GameSessions: DbSet<GameSession>
-    +Scores: DbSet<Score>
-    +Groups: DbSet<Group>
-    +GroupMemberships: DbSet<GroupMembership>
-    +Institutions: DbSet<Institution>
-    +LeaderboardEntries: DbSet<LeaderboardEntry>
-    
-}
-
-' Relationships
-Game <|-- FinderGame
-Game <|-- ReadingGame
-Game <|-- BlockGame
-FinderGame "1" *-- "many" GameObject
-ReadingGame "1" *-- "many" ReadingQuestion
-BlockGame "1" *-- "many" Block
-User "1" -- "many" Score
-User "1" -- "many" GameSession
-User "*" -- "*" Group : through GroupMembership
-Game "1" -- "many" Score
-Game "1" -- "many" Achievement
-Institution "1" -- "many" Group
-Group "1" -- "many" GroupMembership
-User "1" -- "*" GroupMembership
-Group "1" -- "1" GroupStats
-User "1" -- "1" UserProgress
-User "1" -- "*" LeaderboardEntry
-
-' Service Dependencies
-IGameService ..> Game
-IScoreService ..> Score
-IUserService ..> User
-IGroupService ..> Group
-
-' Achievement Dependencies
-Achievement "*" -- "1" Game
-
-' Controller Dependencies
-GameController --> IGameService
-GameController --> IScoreService
-ScoreController --> IScoreService
-UserController --> IUserService
-GroupController --> IGroupService
-
-' External Integrations
+' EXTERNAL INTEGRATIONS
 package "External Integrations" {
     interface IEmailService {
         +sendEmail(to: string, subject: string, body: string): void
@@ -345,6 +328,11 @@ package "External Integrations" {
         +sendWelcomeEmail(email: string, username: string): void
         +sendGroupInvitation(email: string, groupName: string, inviterName: string): void
         +sendAchievementNotification(email: string, achievementName: string): void
+        +sendTimeExpiredNotification(email: string, gameTitle: string): void
+        +sendCompletionNotification(email: string, gameTitle: string): void
+        +sendStreakMilestoneNotification(email: string, streak: int): void
+        +sendWelcomeToGroup(email: string, groupName: string): void
+        +notifyGroupMembers(groupId: UUID, status: GroupState): void
     }
 
     class SmtpEmailService {
@@ -365,11 +353,66 @@ package "External Integrations" {
     }
 }
 
+' DATABASE CONTEXT
+class AppDbContext {
+    +Users: DbSet<User>
+    +Games: DbSet<Game>
+    +GameSessions: DbSet<GameSession>
+    +Scores: DbSet<Score>
+    +Groups: DbSet<Group>
+    +GroupMemberships: DbSet<GroupMembership>
+    +Institutions: DbSet<Institution>
+    +LeaderboardEntries: DbSet<LeaderboardEntry>
+    +UserProgress: DbSet<UserProgress>
+    +GroupStats: DbSet<GroupStats>
+}
 
-' Add relationships for email service
-SmtpEmailService ..|> IEmailService
-SmtpEmailService --> EmailConfiguration
-IUserService --> IEmailService : uses
-IGroupService --> IEmailService : uses
+' CLASS INHERITANCE RELATIONSHIPS
+Game <|-- FinderGame
+Game <|-- ReadingGame
+Game <|-- BlockGame
+Game "1" -- "many" GameSession
+Game "1" -- "many" Achievement
+Game "1" -- "many" Score
+FinderGame "1" *-- "many" GameObject
+ReadingGame "1" *-- "many" ReadingQuestion
+BlockGame "1" *-- "many" Block
+
+' Core Domain Relationships
+User "1" -- "many" GameSession
+User "1" -- "many" Score
+User "1" -- "1" UserProgress
+User "*" -- "*" Group : through GroupMembership
+
+' Institution Management Relationships
+Institution "1" -- "many" Group
+Group "1" -- "many" GroupMembership
+Group "1" -- "1" GroupStats
+GroupMembership "1" -- "1" User
+
+' Analytics Relationships
+UserProgress "1" -- "1" User
+GroupStats "1" -- "1" Group
+LeaderboardEntry "1" -- "1" User
+LeaderboardEntry "1" -- "1" Game
+
+' SERVICE DEPENDENCIES
+IGameService ..> IScoreService : uses
+IScoreService ..> IEmailService : uses
+IUserService ..> IEmailService : uses
+IGroupService ..> IEmailService : uses
+
+' CONTROLLER DEPENDENCIES
+GameController --> IGameService : uses
+GameController --> IScoreService : uses
+ScoreController --> IScoreService : uses
+UserController --> IUserService : uses
 UserController --> IEmailService : uses
+GroupController --> IGroupService : uses
+AnalyticsController --> IAnalyticsService : uses
+
+' EMAIL SERVICE IMPLEMENTATION
+SmtpEmailService ..|> IEmailService : implements
+SmtpEmailService --> EmailConfiguration : uses
+
 @enduml

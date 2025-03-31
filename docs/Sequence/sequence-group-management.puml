@@ -2,158 +2,91 @@
 ' =============================================
 ' Group Management Sequence Diagram
 ' =============================================
-' This diagram illustrates the complete flow of group management operations,
-' including creation, member invitation, joining, and status updates.
-'
-' Key Participants:
-' - InstitutionalAdmin: Manages groups and members
-' - User: Joins groups and receives notifications
-' - GroupController: Handles group-related HTTP requests
-' - GroupService: Manages group operations
-' - GroupRepository: Stores group data
-' - UserRepository: Manages user data
-' - EmailService: Sends notifications
-'
-' Main Flows:
-' 1. Group Creation
-'    - Group data validation
-'    - Group storage
-'    - Success notification
-'
-' 2. Member Invitation
-'    - Email validation
-'    - Invitation processing
-'    - Email notifications
-'
-' 3. Member Joining
-'    - Invite validation
-'    - Group capacity check
-'    - Member addition
-'    - Welcome notification
-'
-' 4. Group Status Update
-'    - Status validation
-'    - Group update
-'    - Member notification
-'
-' Key Features:
-' - Group capacity management
-' - Email notifications
-' - Status tracking
-' - Member management
+' This diagram shows the flow of group management, including:
+' - Group creation
+' - Member invitation
+' - Member joining
+' - Group status updates
 ' =============================================
 
-title Group Management Flow
-
 actor InstitutionalAdmin
-participant GroupController
-participant GroupService
-participant GroupRepository
-participant UserRepository
-participant EmailService
+actor User
+participant "GroupController" as GroupController
+participant "IGroupService" as GroupService
+participant "IGroupRepository" as GroupRepository
+participant "IUserRepository" as UserRepository
+participant "IGroupMembershipRepository" as GroupMembershipRepository
+participant "IEmailService" as EmailService
 
 == Group Creation ==
-
-InstitutionalAdmin -> GroupController: createGroup(groupData)
+InstitutionalAdmin -> GroupController: createGroup(group)
 activate GroupController
-
-GroupController -> GroupService: createGroup(groupData)
+GroupController -> GroupService: createGroup(group)
 activate GroupService
-
 GroupService -> GroupRepository: save(group)
 activate GroupRepository
 GroupRepository --> GroupService: savedGroup
 deactivate GroupRepository
-
-GroupService --> GroupController: groupCreated
+GroupService -> GroupService: updateGroupStatus(groupId)
+GroupService --> GroupController: createdGroup
 deactivate GroupService
-
-GroupController --> InstitutionalAdmin: groupCreationSuccess
+GroupController --> InstitutionalAdmin: groupCreated
 deactivate GroupController
 
 == Member Invitation ==
-
-InstitutionalAdmin -> GroupController: inviteMembers(groupId, emails[])
+InstitutionalAdmin -> GroupController: inviteMembers(groupId, emails)
 activate GroupController
-
-GroupController -> GroupService: processMemberInvitations(groupId, emails[])
+GroupController -> GroupService: processMemberInvitations(groupId, emails)
 activate GroupService
-
-loop for each email
-    GroupService -> UserRepository: getByEmail(email)
-    activate UserRepository
-    UserRepository --> GroupService: user
-    deactivate UserRepository
-
-    GroupService -> EmailService: sendGroupInvitation(email, groupName)
-    activate EmailService
-    EmailService --> GroupService: invitationSent
-    deactivate EmailService
-end
-
+GroupService -> UserRepository: getUsersByEmails(emails)
+activate UserRepository
+UserRepository --> GroupService: users
+deactivate UserRepository
+GroupService -> EmailService: sendGroupInvitation(email, groupName, inviterName)
+activate EmailService
+EmailService --> GroupService: invitationSent
+deactivate EmailService
 GroupService --> GroupController: invitationsSent
 deactivate GroupService
-
-GroupController --> InstitutionalAdmin: invitationsProcessed
+GroupController --> InstitutionalAdmin: membersInvited
 deactivate GroupController
 
 == Member Joining ==
-
-actor User
 User -> GroupController: joinGroup(groupId, inviteToken)
 activate GroupController
-
 GroupController -> GroupService: processJoinRequest(groupId, userId)
 activate GroupService
-
-GroupService -> GroupRepository: getMemberCount(groupId)
-activate GroupRepository
-GroupRepository --> GroupService: count
-deactivate GroupRepository
-
-alt count within limits
-    GroupService -> GroupRepository: addMember(groupId, userId)
-    activate GroupRepository
-    GroupRepository --> GroupService: memberAdded
-    deactivate GroupRepository
-
-    GroupService -> EmailService: sendWelcomeToGroup(email, groupName)
-    activate EmailService
-    EmailService --> GroupService: emailSent
-    deactivate EmailService
-
-    GroupService --> GroupController: joinSuccess
-else group full
-    GroupService --> GroupController: groupFull
-end
-
+GroupService -> GroupMembershipRepository: save(membership)
+activate GroupMembershipRepository
+GroupMembershipRepository --> GroupService: savedMembership
+deactivate GroupMembershipRepository
+GroupService -> GroupService: updateMemberCount(groupId)
+GroupService -> GroupService: updateGroupStats(groupId)
+GroupService -> EmailService: sendWelcomeToGroup(email, groupName)
+activate EmailService
+EmailService --> GroupService: welcomeSent
+deactivate EmailService
+GroupService --> GroupController: memberJoined
 deactivate GroupService
-
-GroupController --> User: joinResult
+GroupController --> User: joinedGroup
 deactivate GroupController
 
 == Group Status Update ==
-
 InstitutionalAdmin -> GroupController: updateGroupStatus(groupId, status)
 activate GroupController
-
-GroupController -> GroupService: updateStatus(groupId, status)
+GroupController -> GroupService: updateGroupStatus(groupId)
 activate GroupService
-
-GroupService -> GroupRepository: updateGroupStatus(groupId, status)
+GroupService -> GroupRepository: update(groupId, status)
 activate GroupRepository
-GroupRepository --> GroupService: updated
+GroupRepository --> GroupService: updatedGroup
 deactivate GroupRepository
-
 GroupService -> EmailService: notifyGroupMembers(groupId, status)
 activate EmailService
-EmailService --> GroupService: notificationsSent
+EmailService --> GroupService: notificationSent
 deactivate EmailService
-
 GroupService --> GroupController: statusUpdated
 deactivate GroupService
-
-GroupController --> InstitutionalAdmin: updateSuccess
+GroupController --> InstitutionalAdmin: groupStatusUpdated
 deactivate GroupController
 
 @enduml 

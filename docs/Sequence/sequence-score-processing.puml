@@ -1,136 +1,118 @@
 @startuml
 ' =============================================
-' Score Processing and Analytics Sequence Diagram
+' Score Processing and Analytics Flow
 ' =============================================
-' This diagram illustrates the complete flow of score processing,
-' analytics generation, and leaderboard management in the platform.
+' This diagram represents the flow of score processing and analytics generation
+' in the educational game platform.
 '
 ' Key Participants:
-' - User: Player submitting scores and viewing analytics
+' - User: The player submitting scores
 ' - ScoreController: Handles score-related HTTP requests
-' - ScoreService: Processes scores and manages analytics
-' - UserService: Updates user statistics
-' - ScoreRepository: Stores score data
-' - LeaderboardEntry: Manages leaderboard rankings
-' - EmailService: Sends achievement notifications
+' - IScoreService: Core score processing logic
+' - IUserService: User-related operations
+' - IAnalyticsService: Analytics generation
+' - IEmailService: Notification handling
+' - IScoreRepository: Score persistence
+' - IUserRepository: User data access
+' - IUserProgressRepository: Progress tracking
+' - ILeaderboardRepository: Leaderboard management
 '
 ' Main Flows:
-' 1. Score Submission
-'    - Score validation and storage
-'    - User stats update
-'    - Streak processing
-'    - Leaderboard update
-'    - Achievement checking
-'
-' 2. Analytics Update
-'    - Score retrieval
-'    - Statistics calculation
-'    - Progress metrics update
-'
-' 3. Leaderboard Retrieval
-'    - Top scores fetching
-'    - Leaderboard formatting
-'    - Data presentation
-'
-' Key Features:
-' - Real-time score processing
-' - User statistics tracking
-' - Achievement system integration
-' - Analytics generation
-' - Leaderboard management
+' 1. Score Submission: User submits a score for a game
+' 2. Analytics Update: System updates user and group analytics
+' 3. Leaderboard Update: System updates relevant leaderboards
 ' =============================================
 
-title Score Processing and Analytics Flow
-
 actor User
-participant ScoreController
-participant ScoreService
-participant UserService
-participant ScoreRepository
-participant LeaderboardEntry
-participant EmailService
+participant "ScoreController" as SC
+participant "IScoreService" as SS
+participant "IUserService" as US
+participant "IAnalyticsService" as AS
+participant "IEmailService" as ES
+participant "IScoreRepository" as SR
+participant "IUserRepository" as UR
+participant "IUserProgressRepository" as UPR
+participant "ILeaderboardRepository" as LR
 
+' Score Submission Flow
 == Score Submission ==
+User -> SC: submitScore(gameId, score)
+activate SC
+SC -> SS: processScore(gameId, userId, score)
+activate SS
 
-User -> ScoreController: submitScore(gameId, score)
-activate ScoreController
+SS -> SS: validateScore(score)
 
-ScoreController -> ScoreService: processScore(gameId, userId, score)
-activate ScoreService
+SS -> SR: saveScore(score)
+activate SR
+SR --> SS: savedScore
+deactivate SR
 
-ScoreService -> ScoreService: validateScore(score)
-ScoreService -> ScoreRepository: save(score)
-activate ScoreRepository
-ScoreRepository --> ScoreService: savedScore
-deactivate ScoreRepository
+SS -> US: getUser(userId)
+activate US
+US -> UR: findById(userId)
+activate UR
+UR --> US: user
+deactivate UR
+US --> SS: user
+deactivate US
+SS -> SS: calculateFinalScore(sessionId)
+SS -> LR: updateLeaderboard(score)
+activate LR
+LR --> SS: updated
+deactivate LR
 
-ScoreService -> UserService: updateUserStats(userId, score)
-activate UserService
-UserService --> ScoreService: statsUpdated
-deactivate UserService
+SS -> UPR: updateUserProgress(userId, score)
+activate UPR
+UPR --> SS: updated
+deactivate UPR
 
-ScoreService -> ScoreService: processStreaks(userId)
-activate LeaderboardEntry
+deactivate AS
 
-ScoreService -> LeaderboardEntry: updateLeaderboard(score)
-LeaderboardEntry -> LeaderboardEntry: calculateRank()
-LeaderboardEntry --> ScoreService: leaderboardUpdated
-
-deactivate LeaderboardEntry
-
-alt new achievement unlocked
-    ScoreService -> EmailService: sendAchievementNotification()
-    activate EmailService
-    EmailService --> ScoreService: notificationSent
-    deactivate EmailService
+opt met achievement threshold
+SS -> ES: sendAchievementNotification(userId, achievement)
+activate ES
+ES --> SS: sent
+deactivate ES
 end
 
-ScoreService --> ScoreController: scoreProcessed
-deactivate ScoreService
+SS --> SC: processedScore
+deactivate SS
+SC --> User: scoreResponse
+deactivate SC
 
-ScoreController --> User: scoreSubmitted
-deactivate ScoreController
+' Analytics Update Flow
+== Analytics fetching ==
+User -> SC: getAnalytics(userId)
+activate SC
+SC -> AS: generateAnalytics(userId)
+activate AS
 
-== Analytics Update ==
+AS -> UPR: getUserProgress(userId)
+activate UPR
+UPR --> AS: progress
+deactivate UPR
 
-ScoreController -> ScoreService: generateAnalytics(userId)
-activate ScoreController
-activate ScoreService
+AS -> LR: getLeaderboard(gameId)
+activate LR
+LR --> AS: leaderboard
+deactivate LR
 
-ScoreService -> ScoreRepository: getUserScores(userId)
-activate ScoreRepository
-ScoreRepository --> ScoreService: scores[]
-deactivate ScoreRepository
+AS -> AS: calculateStatistics()
+AS --> SC: analytics
+deactivate AS
+SC --> User: analyticsResponse
+deactivate SC
 
-ScoreService -> ScoreService: calculateStatistics()
-ScoreService -> ScoreService: updateProgressMetrics()
-
-
-
-ScoreService --> ScoreController: analyticsGenerated
-deactivate ScoreService
-
-ScoreController --> User: statisticsUpdated
-deactivate ScoreController
-
-== Leaderboard Retrieval ==
-
-User -> ScoreController: getLeaderboard(gameId)
-activate ScoreController
-
-ScoreController -> ScoreService: fetchLeaderboard(gameId)
-activate ScoreService
-
-ScoreService -> LeaderboardEntry: getTopScores(gameId, limit)
-activate LeaderboardEntry
-LeaderboardEntry --> ScoreService: topScores[]
-deactivate LeaderboardEntry
-
-ScoreService -> ScoreService: formatLeaderboard()
-ScoreService --> ScoreController: leaderboard
-deactivate ScoreService
-
-ScoreController --> User: leaderboardData
-deactivate ScoreController
+    ' Leaderboard Flow
+== Leaderboard fetching ==
+User -> SC: getLeaderboard(gameId)
+activate SC
+SC -> LR: fetchLeaderboard(gameId)
+activate LR
+LR --> SC: leaderboard
+deactivate LR
+SC --> User: leaderboardResponse
+deactivate SC
 
 @enduml 
