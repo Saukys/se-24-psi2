@@ -37,7 +37,6 @@ Authenticating --> Authenticated : validCredentials
 Authenticating --> Failed : invalidCredentials
 Failed --> Anonymous : retry
 Authenticated --> Active : firstLogin
-Active --> Streaking : dailyLogin
 Streaking --> Active : missedDay
 Active --> Anonymous : logout()
 
