@@ -3,3 +3,4 @@
 .vs/
 **/coverage-report/
 **/TestResults/
+se-24.backend/appsettings.Development.json
