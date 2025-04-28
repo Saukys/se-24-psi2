@@ -1,0 +1,95 @@
+﻿@page "/games"
+@inject HttpClient Http
+@inject ILogger<Games> Logger
+
+<div class="container mt-4">
+    <h3 class="mb-4">GAMES</h3>
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <span>Loading...</span>
+        </div>
+    }
+    else if (errorHappened)
+    {
+        <div class="text-center text-danger">
+            <span>@errorMessage</span>
+        </div>
+    }
+    else
+    {
+        <div class="row justify-content-center g-2">
+            <div class="col-10 col-sm-4">
+                <a href="/findergame" class="btn btn-dark btn-block text-start p-3" style="height: 150px;">
+                    <div class="d-flex flex-column justify-content-between h-100">
+                        <div class="fs-4 fw-bold">Find The Objects</div>
+                        <div class="fs-6 text-end">@FinderLevels Levels</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-10 col-sm-4">
+                <a href="/reading" class="btn btn-dark btn-block text-start p-3" style="height: 150px;">
+                    <div class="d-flex flex-column justify-content-between h-100">
+                        <div class="fs-4 fw-bold">Reading Game</div>
+                        <div class="fs-6 text-end">@ReadingLevels Levels</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-10 col-sm-4">
+                <a href="/blockgame" class="btn btn-dark btn-block text-start p-3" style="height: 150px;">
+                    <div class="d-flex flex-column justify-content-between h-100">
+                        <div class="fs-4 fw-bold">Press the Block</div>
+                        <div class="fs-6 text-end">1 Level</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private int FinderLevels { get; set; } = 0;
+    private int ReadingLevels { get; set; } = 0;
+    private bool isLoading = true;
+    private bool errorHappened = false;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        try
+        {
+            HttpResponseMessage finderResponse = await Http.GetAsync("FinderLevels/count");
+            string finderRaw = await finderResponse.Content.ReadAsStringAsync();
+            if (!string.IsNullOrWhiteSpace(finderRaw))
+            {
+                FinderLevels = int.Parse(finderRaw);
+            }
+            else
+            {
+                throw new Exception("Finder Levels API returned an empty response.");
+            }
+
+            HttpResponseMessage readingResponse = await Http.GetAsync("ReadingLevels/count");
+            string readingRaw = await readingResponse.Content.ReadAsStringAsync();
+
+            if (!string.IsNullOrWhiteSpace(readingRaw))
+            {
+                ReadingLevels = int.Parse(readingRaw);
+            }
+            else
+            {
+                throw new Exception("Reading Levels API returned an empty response.");
+            }
+
+            isLoading = false;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError($"Error fetching levels: {ex.Message}");
+            errorHappened = true;
+            errorMessage = $"Failed to load levels: {ex.Message}";
+            isLoading = false;
+        }
+    }
+}
