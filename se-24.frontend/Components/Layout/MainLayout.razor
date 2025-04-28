@@ -1,4 +1,6 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 
 <div class="page">
     <div class="sidebar">
@@ -7,17 +9,92 @@
 
     <main>
         <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+            @if (IsAuthenticated)
+            {
+                <span class="me-3">Welcome, @Username!</span>
+                <button class="btn btn-link" @onclick="HandleLogout">Logout</button>
+                <a href="/Profile" class="btn btn-link">Profile</a>
+            }
+            else
+            {
+                <a href="/login" class="btn btn-link">Login</a>
+                <a href="/register" class="btn btn-link">Register</a>
+            }
         </div>
 
         <article class="content px-4">
             @Body
         </article>
+
+        <div id="blazor-error-ui">
+            An unhandled error has occurred.
+            <a href="" class="reload">Reload</a>
+            <a class="dismiss">🗙</a>
+        </div>
     </main>
 </div>
 
-<div id="blazor-error-ui">
-    An unhandled error has occurred.
-    <a href="" class="reload">Reload</a>
-    <a class="dismiss">🗙</a>
-</div>
+@code {
+    private bool IsAuthenticated { get; set; }
+    private string Username { get; set; }
+    private bool _isInitialized;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_isInitialized)
+        {
+            await CheckAuthStatus();
+            _isInitialized = true;
+            StateHasChanged();
+        }
+    }
+
+    private async Task CheckAuthStatus()
+    {
+        try
+        {
+            var authState = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authState");
+            if (!string.IsNullOrEmpty(authState))
+            {
+                var authData = System.Text.Json.JsonSerializer.Deserialize<AuthState>(authState);
+                IsAuthenticated = true;
+                Username = authData.Username;
+            }
+            else
+            {
+                IsAuthenticated = false;
+                Username = string.Empty;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle any errors during auth check
+            IsAuthenticated = false;
+            Username = string.Empty;
+        }
+    }
+
+    private async Task HandleLogout()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "authState");
+            IsAuthenticated = false;
+            Username = string.Empty;
+            NavigationManager.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            // Handle any errors during logout
+            IsAuthenticated = false;
+            Username = string.Empty;
+            NavigationManager.NavigateTo("/");
+        }
+    }
+
+    private class AuthState
+    {
+        public string Username { get; set; }
+        public Guid UserId { get; set; }
+    }
+}

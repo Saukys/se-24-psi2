@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using se_24.backend.src.Data;
+using se_24.backend.Data;
 using se_24.backend.src.Interfaces;
 using se_24.shared.src.Games.FinderGame;
 

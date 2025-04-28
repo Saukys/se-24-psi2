@@ -1,0 +1,239 @@
+@page "/profile"
+@using se_24.frontend.Models
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+
+<div class="container mt-4">
+    @if (!IsAuthenticated)
+    {
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="alert alert-warning text-center">
+                    <h4>Please <a href="/login">login</a> to view your profile</h4>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <!-- User Profile Card -->
+            <div class="col-md-4 mb-4">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="text-center mb-0">Profile Overview</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <div class="profile-avatar">
+                                <i class="fas fa-user-circle fa-5x text-primary"></i>
+                            </div>
+                            <h3 class="mt-3">@userInfo.Username</h3>
+                            <p class="text-muted">@userInfo.Email</p>
+                        </div>
+                        <hr>
+                        <div class="profile-details">
+                            <p><strong>Member Since:</strong><br>@userInfo.CreatedAt.ToString("MMMM dd, yyyy")</p>
+                            <p><strong>Last Login:</strong><br>@(userInfo.LastLoginAt?.ToString("MMMM dd, yyyy HH:mm") ?? "Never")</p>
+                            <p><strong>Biggest streak:</strong><br>25</p>
+                            <p><strong>Current streak:</strong><br>5</p>
+                            
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Statistics -->
+            <div class="col-md-8">
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Game Statistics</h4>
+                    </div>
+                    <div class="card-body">
+                        @if (UserStats != null)
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>Game</th>
+                                            <th>High Score</th>
+                                            <th>Games Played</th>
+                                            <th>Last Played</th>
+                                            <th>Procentile</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var stat in UserStats)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-gamepad me-2 text-primary"></i>
+                                                        @stat.GameName
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-success">@stat.HighScore</span>
+                                                </td>
+                                                <td>@stat.GamesPlayed</td>
+                                                <td>@stat.LastPlayed?.ToString("MMM dd, yyyy")</td>
+                                                <td>Top 1%</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-4">
+                                <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No game statistics available yet.</p>
+                                <a href="/" class="btn btn-primary">Start Playing</a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+        border-radius: 50%;
+    }
+
+    .profile-details p {
+        margin-bottom: 1rem;
+    }
+
+    .achievement-card {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        transition: transform 0.2s;
+    }
+
+    .achievement-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .achievement-info {
+        margin-left: 1rem;
+    }
+
+    .achievement-info h5 {
+        margin-bottom: 0.25rem;
+    }
+
+    .table th {
+        font-weight: 600;
+    }
+
+    .badge {
+        font-size: 0.9rem;
+        padding: 0.5em 0.75em;
+    }
+</style>
+
+@code {
+    private bool IsAuthenticated { get; set; }
+    private UserInfo userInfo { get; set; }
+    private List<GameStat> UserStats { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await CheckAuthStatus();
+            if (IsAuthenticated)
+            {
+                await LoadUserInfo();
+                await LoadUserStats();
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task CheckAuthStatus()
+    {
+        try
+        {
+            var authState = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authState");
+            IsAuthenticated = !string.IsNullOrEmpty(authState);
+        }
+        catch
+        {
+            IsAuthenticated = false;
+        }
+    }
+
+    private async Task LoadUserInfo()
+    {
+        try
+        {
+            var authState = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authState");
+            if (!string.IsNullOrEmpty(authState))
+            {
+                var authData = System.Text.Json.JsonSerializer.Deserialize<AuthState>(authState);
+                // TODO: Call backend API to get user info
+                userInfo = new UserInfo
+                {
+                    Username = authData.Username,
+                    Email = "G****@gmail.com", // This should come from the backend
+                    CreatedAt = DateTime.UtcNow, // This should come from the backend
+                    LastLoginAt = DateTime.UtcNow // This should come from the backend
+                };
+            }
+        }
+        catch
+        {
+            // Handle error
+        }
+    }
+
+    private async Task LoadUserStats()
+    {
+        try
+        {
+            // TODO: Call backend API to get user stats
+            UserStats = new List<GameStat>
+            {
+                new GameStat { GameName = "Finder Game", HighScore = 1000, GamesPlayed = 5, LastPlayed = DateTime.UtcNow.AddDays(-1) },
+                new GameStat { GameName = "Reading Game", HighScore = 800, GamesPlayed = 3, LastPlayed = DateTime.UtcNow.AddDays(-3) },
+                new GameStat { GameName = "Block Game", HighScore = 500, GamesPlayed = 2, LastPlayed = DateTime.UtcNow.AddDays(-5) }
+            };
+        }
+        catch
+        {
+            // Handle error
+        }
+    }
+
+    private class UserInfo
+    {
+        public string Username { get; set; }
+        public string Email { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? LastLoginAt { get; set; }
+    }
+
+    private class AuthState
+    {
+        public string Username { get; set; }
+        public Guid UserId { get; set; }
+    }
+} 
